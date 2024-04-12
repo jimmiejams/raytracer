@@ -9,12 +9,13 @@ use std::ffi::OsStr;
 use std::path::Path;
 use image::{Rgb, Rgb32FImage};
 use indicatif::ProgressBar;
-use crate::ray::Ray;
-use crate::vec3::Vec3;
-use crate::hittable_list::*;
-use crate::sphere::Sphere;
+use ray::Ray;
+use vec3::Vec3;
+use hittable_list::*;
+use sphere::Sphere;
+use crate::hittable::Hittable;
 
-fn ray_colour(r: &Ray, world: &HittableList) -> Rgb<f32> {
+fn ray_colour(r: &Ray, world: &impl Hittable) -> Rgb<f32> {
     let hit_record = world.hit(r, 0.0, None);
     if let Some(hit) = hit_record {
         let colour = (hit.normal + Vec3::new(1.0, 1.0, 1.0)) * 0.5;

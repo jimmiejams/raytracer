@@ -14,7 +14,10 @@ impl HittableList {
     pub fn new() -> Self {
         Self { objects: vec![] }
     }
-    pub fn hit(&self, r: &Ray, t_min: f32, t_max: Option<f32>) -> Option<HitRecord> {
+}
+
+impl Hittable for HittableList {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: Option<f32>) -> Option<HitRecord> {
         let mut best_hit: Option<HitRecord> = None;
         let mut t_max = t_max;
         for i in &self.objects {
