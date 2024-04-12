@@ -3,6 +3,8 @@ pub mod vec3;
 mod hittable;
 mod sphere;
 mod hittable_list;
+mod random;
+mod camera;
 
 use std::env;
 use std::ffi::OsStr;
@@ -13,6 +15,7 @@ use ray::Ray;
 use vec3::Vec3;
 use hittable_list::*;
 use sphere::Sphere;
+use crate::camera::Camera;
 use crate::hittable::Hittable;
 
 fn ray_colour(r: &Ray, world: &impl Hittable) -> Rgb<f32> {
@@ -39,14 +42,7 @@ fn main() {
     world.objects.push(HittableObject::Sphere(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0)));
 
     // camera
-    const VIEWPORT_HEIGHT: f32 = 2.0;
-    const VIEWPORT_WIDTH: f32 = ASPECT_RATIO * VIEWPORT_HEIGHT;
-    const FOCAL_LENGTH: f32 = 1.0;
-
-    let origin = Vec3::new(0.0, 0.0, 0.0);
-    let horizontal = Vec3::new(VIEWPORT_WIDTH, 0.0, 0.0);
-    let vertical = Vec3::new(0.0, VIEWPORT_HEIGHT, 0.0);
-    let lower_left_corner = origin - horizontal / 2.0 - vertical / 2.0 - Vec3::new(0.0, 0.0, FOCAL_LENGTH);
+    let camera = Camera::new(ASPECT_RATIO);
 
     let args: Vec<String> = env::args().collect();
     let output_filename = Path::new(&args[1]);
@@ -58,8 +54,7 @@ fn main() {
         for x in 0..IMAGE_WIDTH {
             let u = (x as f32) / (IMAGE_WIDTH - 1) as f32;
             let v = (y as f32) / (IMAGE_HEIGHT - 1) as f32;
-            let direction = lower_left_corner + horizontal * u + vertical * v - origin;
-            let ray = Ray::new(&origin, &direction);
+            let ray = camera.get_ray(u, v);
             let pixel_colour = ray_colour(&ray, &world);
             output_image.put_pixel(x, y, pixel_colour);
         }
