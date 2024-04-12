@@ -1,5 +1,8 @@
 pub mod ray;
 pub mod vec3;
+mod hittable;
+mod sphere;
+mod hittable_list;
 
 use std::env;
 use std::ffi::OsStr;
@@ -8,14 +11,13 @@ use image::{Rgb, Rgb32FImage};
 use indicatif::ProgressBar;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
+use crate::hittable_list::*;
+use crate::sphere::Sphere;
 
-fn ray_colour(r: &Ray) -> Rgb<f32> {
-    let sphere_centre = Vec3::new(0.0, 0.0, -1.0);
-    let sphere_radius: f32 = 0.5;
-    let t = hit_sphere(&sphere_centre, sphere_radius, &r);
-    if t > 0.0 {
-        let n = (r.at(t) - sphere_centre).unit_vector();
-        let colour =  Vec3::new(n.x + 1.0, n.y + 1.0, n.z + 1.0) * 0.5;
+fn ray_colour(r: &Ray, world: &HittableList) -> Rgb<f32> {
+    let hit_record = world.hit(r, 0.0, None);
+    if let Some(hit) = hit_record {
+        let colour = (hit.normal + Vec3::new(1.0, 1.0, 1.0)) * 0.5;
         return Rgb([colour.x, colour.y, colour.z]);
     }
     let unit_direction = r.direction.unit_vector();
@@ -24,25 +26,16 @@ fn ray_colour(r: &Ray) -> Rgb<f32> {
     Rgb([c.x, c.y, c.z])
 }
 
-fn hit_sphere(centre: &Vec3, radius: f32, r: &Ray) -> f32 {
-    let oc = r.origin - *centre;
-    let a = r.direction.length_squared();
-    let half_b = oc.dot(&r.direction);
-    let c = oc.length_squared() - radius * radius;
-    let discriminant = half_b * half_b - a * c;
-    if discriminant < 0.0 {
-        return -1.0;
-    }
-    else {
-        return (-half_b - discriminant.sqrt()) / a;
-    }
-}
-
 fn main() {
     // image
     const ASPECT_RATIO: f32 = 16.0 / 9.0;
     const IMAGE_WIDTH: u32 = 400;
     const IMAGE_HEIGHT: u32 = (IMAGE_WIDTH as f32 / ASPECT_RATIO) as u32;
+
+    // world
+    let mut world: HittableList = HittableList::new();
+    world.objects.push(HittableObject::Sphere(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5)));
+    world.objects.push(HittableObject::Sphere(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0)));
 
     // camera
     const VIEWPORT_HEIGHT: f32 = 2.0;
@@ -66,7 +59,7 @@ fn main() {
             let v = (y as f32) / (IMAGE_HEIGHT - 1) as f32;
             let direction = lower_left_corner + horizontal * u + vertical * v - origin;
             let ray = Ray::new(&origin, &direction);
-            let pixel_colour = ray_colour(&ray);
+            let pixel_colour = ray_colour(&ray, &world);
             output_image.put_pixel(x, y, pixel_colour);
         }
         pb.inc(1);
