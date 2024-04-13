@@ -1,6 +1,7 @@
 use std::ops::{AddAssign, DivAssign, MulAssign, Neg, SubAssign, Mul, Add, Div, Sub};
 use std::convert::Into;
 use image::Rgb;
+use crate::random;
 
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
 pub struct Vec3 {
@@ -12,6 +13,31 @@ pub struct Vec3 {
 impl Vec3 {
     pub fn new(x: f32, y: f32, z: f32) -> Vec3 {
         Vec3 { x: x, y: y, z: z }
+    }
+
+    pub fn random_new() -> Vec3 {
+        Vec3 {
+            x: rand::random::<f32>(),
+            y: rand::random::<f32>(),
+            z: rand::random::<f32>(),
+        }
+    }
+
+    pub fn random_range_new(min: f32, max: f32) -> Vec3 {
+        Vec3 {
+            x: random::random_range(min, max),
+            y: random::random_range(min, max),
+            z: random::random_range(min, max),
+        }
+    }
+
+    pub fn random_in_unit_sphere() -> Vec3 {
+        loop {
+            let p = Vec3::random_range_new(-1.0, 1.0);
+            if p.length_squared() < 1.0 {
+                return p;
+            }
+        }
     }
 
     pub fn length(&self) -> f32 {
@@ -172,6 +198,23 @@ mod tests {
         assert_eq!(v.x, 1.0);
         assert_eq!(v.y, 2.0);
         assert_eq!(v.z, 3.0);
+    }
+
+    #[test]
+    fn random_new_range() {
+        let v = Vec3::random_range_new(-2.0, 2.0);
+        assert!(v.x >= -2.0);
+        assert!(v.x <= 2.0);
+        assert!(v.y >= -2.0);
+        assert!(v.y <= 2.0);
+        assert!(v.z >= -2.0);
+        assert!(v.z <= 2.0);
+    }
+
+    #[test]
+    fn random_in_unit_sphere() {
+        let v = Vec3::random_in_unit_sphere();
+        assert!(v.length() < 1.0);
     }
 
     #[test]

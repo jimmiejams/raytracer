@@ -21,10 +21,16 @@ mod hittable_list;
 mod random;
 mod camera;
 
-fn ray_colour(r: &Ray, world: &impl Hittable) -> Vec3 {
-    let hit_record = world.hit(r, 0.0, None);
+fn ray_colour(r: &Ray, world: &impl Hittable, depth: i32) -> Vec3 {
+    if depth <= 0 {
+        return Vec3::new(0.0, 0.0, 0.0);
+    }
+    let hit_record = world.hit(r, 0.001, None);
     if let Some(hit) = hit_record {
-        return (hit.normal + Vec3::new(1.0, 1.0, 1.0)) * 0.5;
+        let target = hit.p + hit.normal + Vec3::random_in_unit_sphere();
+        let d = target - hit.p;
+        let new_ray = Ray::new(&hit.p, &d);
+        return ray_colour(&new_ray, world, depth - 1) * 0.5;
     }
     let unit_direction = r.direction.unit_vector();
     let t = 0.5 * (unit_direction.y + 1.0);
@@ -32,7 +38,12 @@ fn ray_colour(r: &Ray, world: &impl Hittable) -> Vec3 {
 }
 
 fn write_colour(output_image: &mut Rgb32FImage, x: u32, y: u32, pixel_colour: &Vec3, samples_per_pixel: u32) {
-    let pixel_colour = (*pixel_colour / (samples_per_pixel as f32)).clamp(0.0, 1.0);
+    let scale = 1.0 / samples_per_pixel as f32;
+    let pixel_colour = Vec3 {
+        x: (scale * pixel_colour.x).sqrt(),
+        y: (scale * pixel_colour.y).sqrt(),
+        z: (scale * pixel_colour.z).sqrt(),
+    }.clamp(0.0, 1.0);
     let rgb_colour: Rgb<f32> = pixel_colour.into();
     output_image.put_pixel(x, y, rgb_colour);
 }
@@ -43,6 +54,7 @@ fn main() {
     const IMAGE_WIDTH: u32 = 400;
     const IMAGE_HEIGHT: u32 = (IMAGE_WIDTH as f32 / ASPECT_RATIO) as u32;
     const SAMPLES_PER_PIXEL: u32 = 100;
+    const MAX_DEPTH: i32 = 50;
 
     // world
     let mut world: HittableList = HittableList::new();
@@ -63,9 +75,9 @@ fn main() {
             let mut pixel_colour: Vec3 = Vec3::new(0.0, 0.0, 0.0);
             for _ in 0..SAMPLES_PER_PIXEL {
                 let u = (x as f32 + rand::random::<f32>()) / (IMAGE_WIDTH - 1) as f32;
-                let v = (y as f32 + rand::random::<f32>()) / (IMAGE_HEIGHT - 1) as f32;
+                let v = ((IMAGE_HEIGHT - y - 1) as f32 + rand::random::<f32>()) / (IMAGE_HEIGHT - 1) as f32;
                 let ray = camera.get_ray(u, v);
-                pixel_colour += ray_colour(&ray, &world);
+                pixel_colour += ray_colour(&ray, &world, MAX_DEPTH);
             }
             write_colour(&mut output_image, x, y, &pixel_colour, SAMPLES_PER_PIXEL);
         }
