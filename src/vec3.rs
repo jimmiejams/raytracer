@@ -1,4 +1,6 @@
 use std::ops::{AddAssign, DivAssign, MulAssign, Neg, SubAssign, Mul, Add, Div, Sub};
+use std::convert::Into;
+use image::Rgb;
 
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
 pub struct Vec3 {
@@ -35,11 +37,25 @@ impl Vec3 {
     pub fn unit_vector(&self) -> Vec3 {
         *self / self.length()
     }
+
+    pub fn clamp(&self, min: f32, max: f32) -> Vec3 {
+        Vec3 {
+            x: if self.x < min { min } else if self.x > max { max } else { self.x },
+            y: if self.y < min { min } else if self.y > max { max } else { self.y },
+            z: if self.z < min { min } else if self.z > max { max } else { self.z },
+        }
+    }
 }
 
 impl Default for Vec3 {
     fn default() -> Self {
         Self { x: 0.0, y: 0.0, z: 0.0 }
+    }
+}
+
+impl Into<Rgb<f32>> for Vec3 {
+    fn into(self) -> Rgb<f32> {
+        Rgb([self.x, self.y, self.z])
     }
 }
 
@@ -280,5 +296,20 @@ mod tests {
         assert_eq!(v.x, 1.0 / 3.0);
         assert_eq!(v.y, 2.0 / 3.0);
         assert_eq!(v.z, 2.0 / 3.0);
+    }
+
+    #[test]
+    fn clamp() {
+        let u = Vec3::new(-1.0, 0.5, 1.5);
+        let v = u.clamp(0.0, 1.0);
+        assert_eq!(v.x, 0.0);
+        assert_eq!(v.y, 0.5);
+        assert_eq!(v.z, 1.0);
+    }
+
+    #[test]
+    fn into_rgb() {
+        let u = Vec3::new(0.1, 0.2, 0.3);
+        assert_eq!(Rgb([0.1, 0.2, 0.3]), u.into());
     }
 }
