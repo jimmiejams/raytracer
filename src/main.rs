@@ -27,7 +27,7 @@ fn ray_colour(r: &Ray, world: &impl Hittable, depth: i32) -> Vec3 {
     }
     let hit_record = world.hit(r, 0.001, None);
     if let Some(hit) = hit_record {
-        let target = hit.p + hit.normal + Vec3::random_in_unit_sphere();
+        let target = hit.p + hit.normal + Vec3::random_unit_vector();
         let d = target - hit.p;
         let new_ray = Ray::new(&hit.p, &d);
         return ray_colour(&new_ray, world, depth - 1) * 0.5;

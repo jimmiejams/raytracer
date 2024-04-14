@@ -40,6 +40,10 @@ impl Vec3 {
         }
     }
 
+    pub fn random_unit_vector() -> Vec3 {
+        Self::random_in_unit_sphere().unit_vector()
+    }
+
     pub fn length(&self) -> f32 {
         self.length_squared().sqrt()
     }
@@ -215,6 +219,12 @@ mod tests {
     fn random_in_unit_sphere() {
         let v = Vec3::random_in_unit_sphere();
         assert!(v.length() < 1.0);
+    }
+
+    #[test]
+    fn random_unit_vector() {
+        let v = Vec3::random_unit_vector();
+        assert!(v.length() <= 1.0);
     }
 
     #[test]
