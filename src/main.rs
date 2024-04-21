@@ -69,8 +69,8 @@ fn main() {
 
     let material_ground: Rc<dyn Material> = Rc::new(lambertian_material::LambertianMaterial::new(&Vec3::new(0.8, 0.8, 0.0)));
     let material_centre: Rc<dyn Material> = Rc::new(lambertian_material::LambertianMaterial::new(&Vec3::new(0.7, 0.3, 0.3)));
-    let material_left: Rc<dyn Material> = Rc::new(metal_material::MetalMaterial::new(&Vec3::new(0.8, 0.8, 0.8)));
-    let material_right: Rc<dyn Material> = Rc::new(metal_material::MetalMaterial::new(&Vec3::new(0.8, 0.6, 0.2)));
+    let material_left: Rc<dyn Material> = Rc::new(metal_material::MetalMaterial::new(&Vec3::new(0.8, 0.8, 0.8), 0.3));
+    let material_right: Rc<dyn Material> = Rc::new(metal_material::MetalMaterial::new(&Vec3::new(0.8, 0.6, 0.2), 1.0));
 
     world.objects.push(HittableObject::Sphere(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0, &Rc::clone(&material_ground))));
     world.objects.push(HittableObject::Sphere(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5, &Rc::clone(&material_centre))));
