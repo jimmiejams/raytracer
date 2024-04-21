@@ -75,6 +75,16 @@ impl Vec3 {
             z: if self.z < min { min } else if self.z > max { max } else { self.z },
         }
     }
+
+    pub fn near_zero(&self) -> bool {
+        const S: f32 = 1e-8;
+        self.x.abs() < S && self.y.abs() < S && self.z.abs() < S
+    }
+
+    pub fn reflect(&self, n: &Vec3) -> Vec3 {
+        let two_b = *n * self.dot(&n) * 2.0;
+        *self - two_b
+    }
 }
 
 impl Default for Vec3 {
@@ -149,6 +159,17 @@ impl Mul<f32> for Vec3 {
             x: self.x * rhs,
             y: self.y * rhs,
             z: self.z * rhs,
+        }
+    }
+}
+
+impl Mul<Vec3> for Vec3 {
+    type Output = Self;
+    fn mul(self, rhs: Self) -> Self::Output {
+        Self::Output {
+            x: self.x * rhs.x,
+            y: self.y * rhs.y,
+            z: self.z * rhs.z,
         }
     }
 }
@@ -295,6 +316,13 @@ mod tests {
         assert_eq!(v.x, 1.0 * 2.0);
         assert_eq!(v.y, 2.0 * 2.0);
         assert_eq!(v.z, 3.0 * 2.0);
+
+        let u = Vec3::new(1.0, 2.0, 3.0);
+        let v = Vec3::new(2.0, 3.0, 4.0);
+        let w = u * v;
+        assert_eq!(w.x, 1.0 * 2.0);
+        assert_eq!(w.y, 2.0 * 3.0);
+        assert_eq!(w.z, 3.0 * 4.0);
     }
 
     #[test]
@@ -364,5 +392,23 @@ mod tests {
     fn into_rgb() {
         let u = Vec3::new(0.1, 0.2, 0.3);
         assert_eq!(Rgb([0.1, 0.2, 0.3]), u.into());
+    }
+
+    #[test]
+    fn near_zero() {
+        let u = Vec3::new(0.1, 0.1, 0.1);
+        assert_eq!(u.near_zero(), false);
+        let v = Vec3::new(1e-9, 1e-9, 1e-9);
+        assert_eq!(v.near_zero(), true);
+    }
+
+    #[test]
+    fn reflect() {
+        let v = Vec3::new(1.0, -1.0, 0.0);
+        let n = Vec3::new(0.0, 1.0, 0.0);
+        let r = v.reflect(&n);
+        assert_eq!(r.x, 1.0);
+        assert_eq!(r.y, 1.0);
+        assert_eq!(r.z, 0.0);
     }
 }

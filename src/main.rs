@@ -1,6 +1,7 @@
 use std::env;
 use std::ffi::OsStr;
 use std::path::Path;
+use std::rc::Rc;
 
 use image::{Rgb, Rgb32FImage};
 use indicatif::ProgressBar;
@@ -12,6 +13,7 @@ use vec3::Vec3;
 
 use crate::camera::Camera;
 use crate::hittable::Hittable;
+use crate::material::Material;
 
 pub mod ray;
 pub mod vec3;
@@ -20,6 +22,9 @@ mod sphere;
 mod hittable_list;
 mod random;
 mod camera;
+mod material;
+mod lambertian_material;
+mod metal_material;
 
 fn ray_colour(r: &Ray, world: &impl Hittable, depth: i32) -> Vec3 {
     if depth <= 0 {
@@ -27,10 +32,13 @@ fn ray_colour(r: &Ray, world: &impl Hittable, depth: i32) -> Vec3 {
     }
     let hit_record = world.hit(r, 0.001, None);
     if let Some(hit) = hit_record {
-        let target = hit.p + hit.normal + Vec3::random_unit_vector();
-        let d = target - hit.p;
-        let new_ray = Ray::new(&hit.p, &d);
-        return ray_colour(&new_ray, world, depth - 1) * 0.5;
+        if let Some(mat) = hit.material.scatter(&r, &hit) {
+            let (attenuation, scattered) = mat;
+            return attenuation * ray_colour(&scattered, world, depth - 1);
+        }
+        else {
+            Vec3::new(0.0, 0.0, 0.0);
+        }
     }
     let unit_direction = r.direction.unit_vector();
     let t = 0.5 * (unit_direction.y + 1.0);
@@ -58,8 +66,16 @@ fn main() {
 
     // world
     let mut world: HittableList = HittableList::new();
-    world.objects.push(HittableObject::Sphere(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5)));
-    world.objects.push(HittableObject::Sphere(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0)));
+
+    let material_ground: Rc<dyn Material> = Rc::new(lambertian_material::LambertianMaterial::new(&Vec3::new(0.8, 0.8, 0.0)));
+    let material_centre: Rc<dyn Material> = Rc::new(lambertian_material::LambertianMaterial::new(&Vec3::new(0.7, 0.3, 0.3)));
+    let material_left: Rc<dyn Material> = Rc::new(metal_material::MetalMaterial::new(&Vec3::new(0.8, 0.8, 0.8)));
+    let material_right: Rc<dyn Material> = Rc::new(metal_material::MetalMaterial::new(&Vec3::new(0.8, 0.6, 0.2)));
+
+    world.objects.push(HittableObject::Sphere(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0, &Rc::clone(&material_ground))));
+    world.objects.push(HittableObject::Sphere(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5, &Rc::clone(&material_centre))));
+    world.objects.push(HittableObject::Sphere(Sphere::new(Vec3::new(-1.0, 0.0, -1.0), 0.5, &Rc::clone(&material_left))));
+    world.objects.push(HittableObject::Sphere(Sphere::new(Vec3::new(1.0, 0.0, -1.0), 0.5, &Rc::clone(&material_right))));
 
     // camera
     let camera = Camera::new(ASPECT_RATIO);
