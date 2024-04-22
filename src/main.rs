@@ -6,25 +6,14 @@ use std::rc::Rc;
 use image::{Rgb, Rgb32FImage};
 use indicatif::ProgressBar;
 
-use hittable_list::*;
-use ray::Ray;
-use sphere::Sphere;
-use vec3::Vec3;
-
-use crate::camera::Camera;
-use crate::hittable::Hittable;
-use crate::material::Material;
-
-pub mod ray;
-pub mod vec3;
-mod hittable;
-mod sphere;
-mod hittable_list;
-mod random;
-mod camera;
-mod material;
-mod lambertian_material;
-mod metal_material;
+use raytracer::ray::Ray;
+use raytracer::sphere::Sphere;
+use raytracer::vec3::Vec3;
+use raytracer::camera::Camera;
+use raytracer::hittable_list::*;
+use raytracer::hittable::Hittable;
+use raytracer::material::Material;
+use raytracer::{lambertian_material, metal_material};
 
 fn ray_colour(r: &Ray, world: &impl Hittable, depth: i32) -> Vec3 {
     if depth <= 0 {
