@@ -85,6 +85,16 @@ impl Vec3 {
         let two_b = *n * self.dot(&n) * 2.0;
         *self - two_b
     }
+
+    /// Refract the vector
+    ///
+    /// Refracts the input vector (`uv`) by `n` using the IoR `etai_over_etat`
+    pub fn refract(&self, n: &Vec3, etai_over_etat: f32) -> Vec3 {
+        let cos_theta = -(*self).dot(n).min(1.0);
+        let r_out_perp = (*self + *n * cos_theta) * etai_over_etat;
+        let r_out_parallel = *n * (1.0 - r_out_perp.length_squared()).abs().sqrt() * -1.0;
+        r_out_perp + r_out_parallel
+    }
 }
 
 impl Default for Vec3 {

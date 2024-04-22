@@ -9,3 +9,4 @@ pub mod camera;
 pub mod material;
 pub mod lambertian_material;
 pub mod metal_material;
+pub mod dialectric_material;

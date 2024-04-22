@@ -13,7 +13,9 @@ use raytracer::camera::Camera;
 use raytracer::hittable_list::*;
 use raytracer::hittable::Hittable;
 use raytracer::material::Material;
-use raytracer::{lambertian_material, metal_material};
+use raytracer::lambertian_material::LambertianMaterial;
+use raytracer::metal_material::MetalMaterial;
+use raytracer::dialectric_material::DialectricMaterial;
 use raytracer::colour::Colour;
 
 fn ray_colour(r: &Ray, world: &impl Hittable, depth: i32) -> Colour {
@@ -57,14 +59,15 @@ fn main() {
     // world
     let mut world: HittableList = HittableList::new();
 
-    let material_ground: Rc<dyn Material> = Rc::new(lambertian_material::LambertianMaterial::new(&Colour::new(0.8, 0.8, 0.0)));
-    let material_centre: Rc<dyn Material> = Rc::new(lambertian_material::LambertianMaterial::new(&Colour::new(0.7, 0.3, 0.3)));
-    let material_left: Rc<dyn Material> = Rc::new(metal_material::MetalMaterial::new(&Colour::new(0.8, 0.8, 0.8), 0.3));
-    let material_right: Rc<dyn Material> = Rc::new(metal_material::MetalMaterial::new(&Colour::new(0.8, 0.6, 0.2), 1.0));
+    let material_ground: Rc<dyn Material> = Rc::new(LambertianMaterial::new(&Colour::new(0.8, 0.8, 0.0)));
+    let material_centre: Rc<dyn Material> = Rc::new(LambertianMaterial::new(&Colour::new(0.1, 0.2, 0.5)));
+    let material_left: Rc<dyn Material> = Rc::new(DialectricMaterial::new(1.5));
+    let material_right: Rc<dyn Material> = Rc::new(MetalMaterial::new(&Colour::new(0.8, 0.6, 0.2), 0.0));
 
     world.objects.push(HittableObject::Sphere(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0, &Rc::clone(&material_ground))));
     world.objects.push(HittableObject::Sphere(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5, &Rc::clone(&material_centre))));
     world.objects.push(HittableObject::Sphere(Sphere::new(Vec3::new(-1.0, 0.0, -1.0), 0.5, &Rc::clone(&material_left))));
+    world.objects.push(HittableObject::Sphere(Sphere::new(Vec3::new(-1.0, 0.0, -1.0), -0.4, &Rc::clone(&material_left))));
     world.objects.push(HittableObject::Sphere(Sphere::new(Vec3::new(1.0, 0.0, -1.0), 0.5, &Rc::clone(&material_right))));
 
     // camera
