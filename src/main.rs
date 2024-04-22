@@ -14,10 +14,11 @@ use raytracer::hittable_list::*;
 use raytracer::hittable::Hittable;
 use raytracer::material::Material;
 use raytracer::{lambertian_material, metal_material};
+use raytracer::colour::Colour;
 
-fn ray_colour(r: &Ray, world: &impl Hittable, depth: i32) -> Vec3 {
+fn ray_colour(r: &Ray, world: &impl Hittable, depth: i32) -> Colour {
     if depth <= 0 {
-        return Vec3::new(0.0, 0.0, 0.0);
+        return Colour::new(0.0, 0.0, 0.0);
     }
     let hit_record = world.hit(r, 0.001, None);
     if let Some(hit) = hit_record {
@@ -26,20 +27,20 @@ fn ray_colour(r: &Ray, world: &impl Hittable, depth: i32) -> Vec3 {
             return attenuation * ray_colour(&scattered, world, depth - 1);
         }
         else {
-            Vec3::new(0.0, 0.0, 0.0);
+            Colour::new(0.0, 0.0, 0.0);
         }
     }
     let unit_direction = r.direction.unit_vector();
     let t = 0.5 * (unit_direction.y + 1.0);
-    Vec3::new(1.0, 1.0, 1.0) * (1.0 - t) + Vec3::new(0.5, 0.7, 1.0) * t
+    Colour::new(1.0, 1.0, 1.0) * (1.0 - t) + Colour::new(0.5, 0.7, 1.0) * t
 }
 
-fn write_colour(output_image: &mut Rgb32FImage, x: u32, y: u32, pixel_colour: &Vec3, samples_per_pixel: u32) {
+fn write_colour(output_image: &mut Rgb32FImage, x: u32, y: u32, pixel_colour: &Colour, samples_per_pixel: u32) {
     let scale = 1.0 / samples_per_pixel as f32;
-    let pixel_colour = Vec3 {
-        x: (scale * pixel_colour.x).sqrt(),
-        y: (scale * pixel_colour.y).sqrt(),
-        z: (scale * pixel_colour.z).sqrt(),
+    let pixel_colour = Colour {
+        r: (scale * pixel_colour.r).sqrt(),
+        g: (scale * pixel_colour.g).sqrt(),
+        b: (scale * pixel_colour.b).sqrt(),
     }.clamp(0.0, 1.0);
     let rgb_colour: Rgb<f32> = pixel_colour.into();
     output_image.put_pixel(x, y, rgb_colour);
@@ -56,10 +57,10 @@ fn main() {
     // world
     let mut world: HittableList = HittableList::new();
 
-    let material_ground: Rc<dyn Material> = Rc::new(lambertian_material::LambertianMaterial::new(&Vec3::new(0.8, 0.8, 0.0)));
-    let material_centre: Rc<dyn Material> = Rc::new(lambertian_material::LambertianMaterial::new(&Vec3::new(0.7, 0.3, 0.3)));
-    let material_left: Rc<dyn Material> = Rc::new(metal_material::MetalMaterial::new(&Vec3::new(0.8, 0.8, 0.8), 0.3));
-    let material_right: Rc<dyn Material> = Rc::new(metal_material::MetalMaterial::new(&Vec3::new(0.8, 0.6, 0.2), 1.0));
+    let material_ground: Rc<dyn Material> = Rc::new(lambertian_material::LambertianMaterial::new(&Colour::new(0.8, 0.8, 0.0)));
+    let material_centre: Rc<dyn Material> = Rc::new(lambertian_material::LambertianMaterial::new(&Colour::new(0.7, 0.3, 0.3)));
+    let material_left: Rc<dyn Material> = Rc::new(metal_material::MetalMaterial::new(&Colour::new(0.8, 0.8, 0.8), 0.3));
+    let material_right: Rc<dyn Material> = Rc::new(metal_material::MetalMaterial::new(&Colour::new(0.8, 0.6, 0.2), 1.0));
 
     world.objects.push(HittableObject::Sphere(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0, &Rc::clone(&material_ground))));
     world.objects.push(HittableObject::Sphere(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5, &Rc::clone(&material_centre))));
@@ -77,7 +78,7 @@ fn main() {
     let pb = ProgressBar::new(IMAGE_HEIGHT as u64);
     for y in 0..IMAGE_HEIGHT {
         for x in 0..IMAGE_WIDTH {
-            let mut pixel_colour: Vec3 = Vec3::new(0.0, 0.0, 0.0);
+            let mut pixel_colour: Colour = Colour::new(0.0, 0.0, 0.0);
             for _ in 0..SAMPLES_PER_PIXEL {
                 let u = (x as f32 + rand::random::<f32>()) / (IMAGE_WIDTH - 1) as f32;
                 let v = ((IMAGE_HEIGHT - y - 1) as f32 + rand::random::<f32>()) / (IMAGE_HEIGHT - 1) as f32;
