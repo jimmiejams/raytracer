@@ -80,7 +80,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     world.objects.push(HittableObject::Sphere(Sphere::new(Vec3::new(1.0, 0.0, -1.0), 0.5, &Rc::clone(&material_right))));
 
     // camera
-    let camera = Camera::new(90.0, ASPECT_RATIO);
+    let camera = Camera::new(
+        &Vec3::new(-2.0, 2.0, 1.0),
+        &Vec3::new(0.0, 0.0, -1.0),
+        &Vec3::new(0.0, 1.0, 0.0),
+        90.0,
+        ASPECT_RATIO
+    );
 
     let mut output_image = Rgb32FImage::new(IMAGE_WIDTH, IMAGE_HEIGHT);
     let pb = ProgressBar::new(IMAGE_HEIGHT as u64);
