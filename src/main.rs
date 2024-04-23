@@ -1,11 +1,8 @@
-use std::{env, process};
 use std::rc::Rc;
 
 use image::{Rgb, Rgb32FImage};
 use indicatif::ProgressBar;
-
-pub mod config;
-use config::Config;
+use clap::Parser;
 
 use raytracer::ray::Ray;
 use raytracer::sphere::Sphere;
@@ -18,6 +15,11 @@ use raytracer::lambertian_material::LambertianMaterial;
 use raytracer::metal_material::MetalMaterial;
 use raytracer::dialectric_material::DialectricMaterial;
 use raytracer::colour::Colour;
+
+#[derive(Parser)]
+struct Cli {
+    output_path: std::path::PathBuf,
+}
 
 fn ray_colour(r: &Ray, world: &impl Hittable, depth: i32) -> Colour {
     if depth <= 0 {
@@ -49,7 +51,13 @@ fn write_colour(output_image: &mut Rgb32FImage, x: u32, y: u32, pixel_colour: &C
     output_image.put_pixel(x, y, rgb_colour);
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // parse command-line arguments
+    let args = Cli::parse();
+    if args.output_path.extension().unwrap() != "exr" {
+        return Err(format!("output filename requires an '.exr' extension").into());
+    }
+
     // image
     const ASPECT_RATIO: f32 = 16.0 / 9.0;
     const IMAGE_WIDTH: u32 = 400;
@@ -74,12 +82,6 @@ fn main() {
     // camera
     let camera = Camera::new(90.0, ASPECT_RATIO);
 
-    let args: Vec<String> = env::args().collect();
-    let config = Config::new(&args).unwrap_or_else(|err| {
-        println!("Problem parsing arguments: {}", err);
-        process::exit(1);
-    });
-
     let mut output_image = Rgb32FImage::new(IMAGE_WIDTH, IMAGE_HEIGHT);
     let pb = ProgressBar::new(IMAGE_HEIGHT as u64);
     for y in 0..IMAGE_HEIGHT {
@@ -97,5 +99,7 @@ fn main() {
     }
     pb.finish_with_message("done");
 
-    output_image.save(config.output_filename).unwrap();
+    output_image.save(args.output_path).unwrap();
+
+    Ok(())
 }
