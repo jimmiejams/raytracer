@@ -9,14 +9,17 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f32) -> Self {
-        const VIEWPORT_HEIGHT: f32 = 2.0;
-        let viewport_width: f32 = aspect_ratio * VIEWPORT_HEIGHT;
+    pub fn new(vfov: f32, aspect_ratio: f32) -> Self {
+        let theta = vfov.to_radians();
+        let h = (theta / 2.0).tan();
+        let viewport_height = 2.0 * h;
+        let viewport_width = aspect_ratio * viewport_height;
+
         const FOCAL_LENGTH: f32 = 1.0;
 
         let origin = Vec3::new(0.0, 0.0, 0.0);
         let horizontal = Vec3::new(viewport_width, 0.0, 0.0);
-        let vertical = Vec3::new(0.0, VIEWPORT_HEIGHT, 0.0);
+        let vertical = Vec3::new(0.0, viewport_height, 0.0);
         Self {
             origin: origin.clone(),
             horizontal: horizontal.clone(),

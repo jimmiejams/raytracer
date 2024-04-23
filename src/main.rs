@@ -72,7 +72,7 @@ fn main() {
     world.objects.push(HittableObject::Sphere(Sphere::new(Vec3::new(1.0, 0.0, -1.0), 0.5, &Rc::clone(&material_right))));
 
     // camera
-    let camera = Camera::new(ASPECT_RATIO);
+    let camera = Camera::new(90.0, ASPECT_RATIO);
 
     let args: Vec<String> = env::args().collect();
     let config = Config::new(&args).unwrap_or_else(|err| {
