@@ -44,6 +44,19 @@ impl Vec3 {
         Self::random_in_unit_sphere().unit_vector()
     }
 
+    pub fn random_in_unit_disc() -> Vec3 {
+        loop {
+            let p = Vec3 {
+                x: random::random_range(-1.0, 1.0),
+                y: random::random_range(-1.0, 1.0),
+                z: 0.0,
+            };
+            if p.length_squared() < 1.0 {
+                return p;
+            }
+        }
+    }
+
     pub fn length(&self) -> f32 {
         self.length_squared().sqrt()
     }
@@ -305,6 +318,12 @@ mod tests {
     }
 
     #[test]
+    fn random_in_unit_disc() {
+        let v = Vec3::random_in_unit_disc();
+        assert!(v.length() <= 1.0);
+    }
+
+    #[test]
     fn length() {
         let v = Vec3::new(1.0, 2.0, 2.0);
         assert_eq!(v.length(), 3.0);
@@ -354,6 +373,16 @@ mod tests {
         assert_eq!(w.x, 3.0 - 1.0);
         assert_eq!(w.y, 3.0 - 2.0);
         assert_eq!(w.z, 3.0 - 3.0);
+
+        let w = &u - v;
+        assert_eq!(w.x, 3.0 - 1.0);
+        assert_eq!(w.y, 3.0 - 2.0);
+        assert_eq!(w.z, 3.0 - 3.0);
+
+        let w = &u - &v;
+        assert_eq!(w.x, 3.0 - 1.0);
+        assert_eq!(w.y, 3.0 - 2.0);
+        assert_eq!(w.z, 3.0 - 3.0);
     }
 
     #[test]
@@ -379,6 +408,13 @@ mod tests {
         assert_eq!(w.x, 1.0 * 2.0);
         assert_eq!(w.y, 2.0 * 3.0);
         assert_eq!(w.z, 3.0 * 4.0);
+
+        let u: f32 = 2.0;
+        let v = Vec3::new(1.0, 2.0, 3.0);
+        let w = u * v;
+        assert_eq!(w.x, 2.0 * 1.0);
+        assert_eq!(w.y, 2.0 * 2.0);
+        assert_eq!(w.z, 2.0 * 3.0);
     }
 
     #[test]
