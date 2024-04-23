@@ -1,10 +1,11 @@
-use std::env;
-use std::ffi::OsStr;
-use std::path::Path;
+use std::{env, process};
 use std::rc::Rc;
 
 use image::{Rgb, Rgb32FImage};
 use indicatif::ProgressBar;
+
+pub mod config;
+use config::Config;
 
 use raytracer::ray::Ray;
 use raytracer::sphere::Sphere;
@@ -74,8 +75,10 @@ fn main() {
     let camera = Camera::new(ASPECT_RATIO);
 
     let args: Vec<String> = env::args().collect();
-    let output_filename = Path::new(&args[1]);
-    assert_eq!(output_filename.extension(), Some(OsStr::new("exr")));
+    let config = Config::new(&args).unwrap_or_else(|err| {
+        println!("Problem parsing arguments: {}", err);
+        process::exit(1);
+    });
 
     let mut output_image = Rgb32FImage::new(IMAGE_WIDTH, IMAGE_HEIGHT);
     let pb = ProgressBar::new(IMAGE_HEIGHT as u64);
@@ -94,5 +97,5 @@ fn main() {
     }
     pb.finish_with_message("done");
 
-    output_image.save(output_filename).unwrap();
+    output_image.save(config.output_filename).unwrap();
 }
