@@ -1,6 +1,7 @@
 use std::ops::{AddAssign, Mul, Add};
 use std::convert::Into;
 use image::Rgb;
+use crate::random;
 
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
 pub struct Colour {
@@ -12,6 +13,22 @@ pub struct Colour {
 impl Colour {
     pub fn new(r: f32, g: f32, b: f32) -> Colour {
         Colour { r, g, b, }
+    }
+
+    pub fn random_new() -> Colour {
+        Colour {
+            r: rand::random::<f32>(),
+            g: rand::random::<f32>(),
+            b: rand::random::<f32>(),
+        }
+    }
+
+    pub fn random_range_new(min: f32, max: f32) -> Colour {
+        Colour {
+            r: random::random_range(min, max),
+            g: random::random_range(min, max),
+            b: random::random_range(min, max),
+        }
     }
 
     pub fn clamp(&self, min: f32, max: f32) -> Colour {

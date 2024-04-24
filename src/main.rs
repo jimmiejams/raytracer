@@ -15,10 +15,75 @@ use raytracer::lambertian_material::LambertianMaterial;
 use raytracer::metal_material::MetalMaterial;
 use raytracer::dialectric_material::DialectricMaterial;
 use raytracer::colour::Colour;
+use raytracer::random::random_range;
 
 #[derive(Parser)]
 struct Cli {
     output_path: std::path::PathBuf,
+}
+
+fn random_scene(world: &mut HittableList) {
+    let material_ground: Rc<dyn Material> = Rc::new(LambertianMaterial::new(&Colour::new(0.5, 0.5, 0.5)));
+    world.objects.push(HittableObject::Sphere(Sphere::new(Vec3::new(0.0, -1000.0, 0.0), 1000.0, &Rc::clone(&material_ground))));
+
+    for a in -11..11 {
+        for b in -11..11 {
+            let choose_mat: f32 = rand::random::<f32>();
+            let centre = Vec3::new(
+                (a as f32) + 0.9 * rand::random::<f32>(),
+                0.2,
+                (b as f32) + 0.9 * rand::random::<f32>()
+            );
+            if (centre - Vec3::new(4.0, 0.2, 0.0)).length() > 0.9 {
+                if choose_mat < 0.8 {
+                    let albedo = Colour::random_new() * Colour::random_new();
+                    let sphere_material: Rc<dyn Material> = Rc::new(LambertianMaterial::new(&albedo));
+                    world.objects.push(
+                        HittableObject::Sphere(
+                            Sphere::new(centre, 0.2, &Rc::clone(&sphere_material))
+                        )
+                    );
+                } else if choose_mat < 0.95 {
+                    let albedo = Colour::random_range_new(0.5, 1.0);
+                    let fuzz = random_range(0.0, 0.5);
+                    let sphere_material: Rc<dyn Material> = Rc::new(MetalMaterial::new(&albedo, fuzz));
+                    world.objects.push(
+                        HittableObject::Sphere(
+                            Sphere::new(centre, 0.2, &Rc::clone(&sphere_material))
+                        )
+                    );
+                } else {
+                    let sphere_material: Rc<dyn Material> = Rc::new(DialectricMaterial::new(1.5));
+                    world.objects.push(
+                        HittableObject::Sphere(
+                            Sphere::new(centre, 0.2, &Rc::clone(&sphere_material))
+                        )
+                    );
+                }
+            }
+        }
+    }
+
+    let material1: Rc<dyn Material> = Rc::new(DialectricMaterial::new(1.5));
+    world.objects.push(
+        HittableObject::Sphere(
+            Sphere::new(Vec3::new(0.0, 1.0, 0.0), 1.0, &Rc::clone(&material1))
+        )
+    );
+
+    let material2: Rc<dyn Material> = Rc::new(LambertianMaterial::new(&Colour::new(0.4, 0.2, 0.1)));
+    world.objects.push(
+        HittableObject::Sphere(
+            Sphere::new(Vec3::new(-4.0, 1.0, 0.0), 1.0, &Rc::clone(&material2))
+        )
+    );
+
+    let material3: Rc<dyn Material> = Rc::new(MetalMaterial::new(&Colour::new(0.7, 0.6, 0.5), 0.0));
+    world.objects.push(
+        HittableObject::Sphere(
+            Sphere::new(Vec3::new(4.0, 1.0, 0.0), 1.0, &Rc::clone(&material3))
+        )
+    );
 }
 
 fn ray_colour(r: &Ray, world: &impl Hittable, depth: i32) -> Colour {
@@ -59,33 +124,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // image
-    const ASPECT_RATIO: f32 = 16.0 / 9.0;
-    const IMAGE_WIDTH: u32 = 400;
+    const ASPECT_RATIO: f32 = 3.0 / 2.0;
+    const IMAGE_WIDTH: u32 = 1200;
     const IMAGE_HEIGHT: u32 = (IMAGE_WIDTH as f32 / ASPECT_RATIO) as u32;
-    const SAMPLES_PER_PIXEL: u32 = 100;
+    const SAMPLES_PER_PIXEL: u32 = 500;
     const MAX_DEPTH: i32 = 50;
 
     // world
     let mut world: HittableList = HittableList::new();
-
-    let material_ground: Rc<dyn Material> = Rc::new(LambertianMaterial::new(&Colour::new(0.8, 0.8, 0.0)));
-    let material_centre: Rc<dyn Material> = Rc::new(LambertianMaterial::new(&Colour::new(0.1, 0.2, 0.5)));
-    let material_left: Rc<dyn Material> = Rc::new(DialectricMaterial::new(1.5));
-    let material_right: Rc<dyn Material> = Rc::new(MetalMaterial::new(&Colour::new(0.8, 0.6, 0.2), 0.0));
-
-    world.objects.push(HittableObject::Sphere(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0, &Rc::clone(&material_ground))));
-    world.objects.push(HittableObject::Sphere(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5, &Rc::clone(&material_centre))));
-    world.objects.push(HittableObject::Sphere(Sphere::new(Vec3::new(-1.0, 0.0, -1.0), 0.5, &Rc::clone(&material_left))));
-    world.objects.push(HittableObject::Sphere(Sphere::new(Vec3::new(-1.0, 0.0, -1.0), -0.4, &Rc::clone(&material_left))));
-    world.objects.push(HittableObject::Sphere(Sphere::new(Vec3::new(1.0, 0.0, -1.0), 0.5, &Rc::clone(&material_right))));
+    random_scene(&mut world);
 
     // camera
+    let look_from = Vec3::new(13.0, 2.0, 3.0);
+    let look_at = Vec3::new(0.0, 0.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let dist_to_focus: f32 = 10.0;
+    let aperture: f32 = 0.02;
     let camera = Camera::new(
-        &Vec3::new(-2.0, 2.0, 1.0),
-        &Vec3::new(0.0, 0.0, -1.0),
-        &Vec3::new(0.0, 1.0, 0.0),
-        45.0,
-        ASPECT_RATIO
+        &look_from,
+        &look_at,
+        &vup,
+        20.0,
+        ASPECT_RATIO,
+        aperture,
+        dist_to_focus
     );
 
     let mut output_image = Rgb32FImage::new(IMAGE_WIDTH, IMAGE_HEIGHT);
