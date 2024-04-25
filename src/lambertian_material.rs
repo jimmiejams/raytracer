@@ -9,9 +9,9 @@ pub struct LambertianMaterial {
 }
 
 impl LambertianMaterial {
-    pub fn new(albedo: &Colour) -> Self {
+    pub fn new(albedo: Colour) -> Self {
         LambertianMaterial {
-            albedo: *albedo,
+            albedo: albedo,
         }
     }
 }
@@ -22,7 +22,7 @@ impl Material for LambertianMaterial {
         if scatter_direction.near_zero() {
             scatter_direction = rec.normal;
         }
-        let scattered = Ray::new(&rec.p, &scatter_direction);
+        let scattered = Ray::new(rec.p, scatter_direction);
         Some((self.albedo, scattered))
     }
 }

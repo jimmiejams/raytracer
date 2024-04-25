@@ -44,7 +44,7 @@ impl Hittable for Sphere {
 
         let p = r.at(root);
         let outward_normal = (p - self.centre) / self.radius;
-        let mut hit = HitRecord::new(&p, root, Arc::clone(&self.material));
+        let mut hit = HitRecord::new(p, root, Arc::clone(&self.material));
         hit.set_face_normal(r, &outward_normal);
         Some(hit)
     }

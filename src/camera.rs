@@ -13,9 +13,9 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(look_from: &Vec3,
-               look_at: &Vec3,
-               vup: &Vec3,
+    pub fn new(look_from: Vec3,
+               look_at: Vec3,
+               vup: Vec3,
                vfov: f32,
                aspect_ratio: f32,
                aperture: f32,
@@ -53,6 +53,6 @@ impl Camera {
 
         let origin = self.origin + offset;
         let direction = self.lower_left_corner + s * self.horizontal + t * self.vertical - origin - offset;
-        Ray::new(&origin, &direction)
+        Ray::new(origin, direction)
     }
 }

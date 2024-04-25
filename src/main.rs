@@ -21,7 +21,7 @@ struct Cli {
 }
 
 fn random_scene(world: &mut HittableList) {
-    let material_ground: Arc<dyn Material + Sync + Send> = Arc::new(LambertianMaterial::new(&Colour::new(0.5, 0.5, 0.5)));
+    let material_ground: Arc<dyn Material + Sync + Send> = Arc::new(LambertianMaterial::new(Colour::new(0.5, 0.5, 0.5)));
     world.objects.push(HittableObject::Sphere(Sphere::new(Vec3::new(0.0, -1000.0, 0.0), 1000.0, Arc::clone(&material_ground))));
 
     for a in -11..11 {
@@ -35,7 +35,7 @@ fn random_scene(world: &mut HittableList) {
             if (centre - Vec3::new(4.0, 0.2, 0.0)).length() > 0.9 {
                 if choose_mat < 0.8 {
                     let albedo = Colour::random_new() * Colour::random_new();
-                    let sphere_material: Arc<dyn Material + Sync + Send> = Arc::new(LambertianMaterial::new(&albedo));
+                    let sphere_material: Arc<dyn Material + Sync + Send> = Arc::new(LambertianMaterial::new(albedo));
                     world.objects.push(
                         HittableObject::Sphere(
                             Sphere::new(centre, 0.2, Arc::clone(&sphere_material))
@@ -44,7 +44,7 @@ fn random_scene(world: &mut HittableList) {
                 } else if choose_mat < 0.95 {
                     let albedo = Colour::random_range_new(0.5, 1.0);
                     let fuzz = random_range(0.0, 0.5);
-                    let sphere_material: Arc<dyn Material + Sync + Send> = Arc::new(MetalMaterial::new(&albedo, fuzz));
+                    let sphere_material: Arc<dyn Material + Sync + Send> = Arc::new(MetalMaterial::new(albedo, fuzz));
                     world.objects.push(
                         HittableObject::Sphere(
                             Sphere::new(centre, 0.2, Arc::clone(&sphere_material))
@@ -69,14 +69,14 @@ fn random_scene(world: &mut HittableList) {
         )
     );
 
-    let material2: Arc<dyn Material + Sync + Send> = Arc::new(LambertianMaterial::new(&Colour::new(0.4, 0.2, 0.1)));
+    let material2: Arc<dyn Material + Sync + Send> = Arc::new(LambertianMaterial::new(Colour::new(0.4, 0.2, 0.1)));
     world.objects.push(
         HittableObject::Sphere(
             Sphere::new(Vec3::new(-4.0, 1.0, 0.0), 1.0, Arc::clone(&material2))
         )
     );
 
-    let material3: Arc<dyn Material + Sync + Send> = Arc::new(MetalMaterial::new(&Colour::new(0.7, 0.6, 0.5), 0.0));
+    let material3: Arc<dyn Material + Sync + Send> = Arc::new(MetalMaterial::new(Colour::new(0.7, 0.6, 0.5), 0.0));
     world.objects.push(
         HittableObject::Sphere(
             Sphere::new(Vec3::new(4.0, 1.0, 0.0), 1.0, Arc::clone(&material3))
@@ -97,19 +97,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut world: HittableList = HittableList::new();
     random_scene(&mut world);
     // camera
-    let look_from = Vec3::new(13.0, 2.0, 3.0);
-    let look_at = Vec3::new(0.0, 0.0, 0.0);
-    let vup = Vec3::new(0.0, 1.0, 0.0);
-    let dist_to_focus: f32 = 10.0;
-    let aperture: f32 = 0.02;
     let camera = Camera::new(
-        &look_from,
-        &look_at,
-        &vup,
+        Vec3::new(13.0, 2.0, 3.0),
+        Vec3::new(0.0, 0.0, 0.0),
+        Vec3::new(0.0, 1.0, 0.0),
         20.0,
         output_image_params.aspect_ratio,
-        aperture,
-        dist_to_focus
+        0.02,
+        10.0
     );
 
     // run the raytracer
