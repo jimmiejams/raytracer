@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 use crate::material::Material;
 use crate::vec3::Vec3;
 use crate::ray::Ray;
@@ -12,11 +12,11 @@ pub struct HitRecord {
     pub normal: Vec3,
     pub t: f32,
     pub front_face: bool,
-    pub material: Rc<dyn Material>,
+    pub material: Arc<dyn Material + Send + Sync>,
 }
 
 impl HitRecord {
-    pub fn new(position: &Vec3, t: f32, material: Rc<dyn Material>) -> Self {
+    pub fn new(position: &Vec3, t: f32, material: Arc<dyn Material + Send + Sync>) -> Self {
         HitRecord {
             p: *position,
             normal: Vec3::default(),
