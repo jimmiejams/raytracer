@@ -1,22 +1,19 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
-use image::{Rgb, Rgb32FImage};
 use indicatif::ProgressBar;
 use clap::Parser;
-use rayon::prelude::*;
 
-use raytracer::ray::Ray;
 use raytracer::sphere::Sphere;
 use raytracer::vec3::Vec3;
 use raytracer::camera::Camera;
 use raytracer::hittable_list::*;
-use raytracer::hittable::Hittable;
 use raytracer::material::Material;
 use raytracer::lambertian_material::LambertianMaterial;
 use raytracer::metal_material::MetalMaterial;
 use raytracer::dialectric_material::DialectricMaterial;
 use raytracer::colour::Colour;
 use raytracer::random::random_range;
+use raytracer::raytracer::{OutputImageParams, Raytracer};
 
 #[derive(Parser)]
 struct Cli {
@@ -87,36 +84,6 @@ fn random_scene(world: &mut HittableList) {
     );
 }
 
-fn ray_colour(r: &Ray, world: &impl Hittable, depth: i32) -> Colour {
-    if depth <= 0 {
-        return Colour::new(0.0, 0.0, 0.0);
-    }
-    let hit_record = world.hit(r, 0.001, None);
-    if let Some(hit) = hit_record {
-        if let Some(mat) = hit.material.scatter(&r, &hit) {
-            let (attenuation, scattered) = mat;
-            return attenuation * ray_colour(&scattered, world, depth - 1);
-        }
-        else {
-            Colour::new(0.0, 0.0, 0.0);
-        }
-    }
-    let unit_direction = r.direction.unit_vector();
-    let t = 0.5 * (unit_direction.y + 1.0);
-    Colour::new(1.0, 1.0, 1.0) * (1.0 - t) + Colour::new(0.5, 0.7, 1.0) * t
-}
-
-fn write_colour(output_image: &mut Rgb32FImage, x: u32, y: u32, pixel_colour: &Colour, samples_per_pixel: u32) {
-    let scale = 1.0 / samples_per_pixel as f32;
-    let pixel_colour = Colour {
-        r: (scale * pixel_colour.r).sqrt(),
-        g: (scale * pixel_colour.g).sqrt(),
-        b: (scale * pixel_colour.b).sqrt(),
-    }.clamp(0.0, 1.0);
-    let rgb_colour: Rgb<f32> = pixel_colour.into();
-    output_image.put_pixel(x, y, rgb_colour);
-}
-
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // parse command-line arguments
     let args = Cli::parse();
@@ -125,16 +92,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // image
-    const ASPECT_RATIO: f32 = 3.0 / 2.0;
-    const IMAGE_WIDTH: u32 = 400;
-    const IMAGE_HEIGHT: u32 = (IMAGE_WIDTH as f32 / ASPECT_RATIO) as u32;
-    const SAMPLES_PER_PIXEL: u32 = 500;
-    const MAX_DEPTH: i32 = 50;
-
+    let output_image_params = OutputImageParams::new(3.0 / 2.0, 400);
     // world
     let mut world: HittableList = HittableList::new();
     random_scene(&mut world);
-
     // camera
     let look_from = Vec3::new(13.0, 2.0, 3.0);
     let look_at = Vec3::new(0.0, 0.0, 0.0);
@@ -146,30 +107,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         &look_at,
         &vup,
         20.0,
-        ASPECT_RATIO,
+        output_image_params.aspect_ratio,
         aperture,
         dist_to_focus
     );
 
-    let mut output_image = Arc::new(Mutex::new(Rgb32FImage::new(IMAGE_WIDTH, IMAGE_HEIGHT)));
-    let pb = ProgressBar::new(IMAGE_HEIGHT as u64);
-    (0..IMAGE_HEIGHT).into_par_iter().for_each(|y| {
-        for x in 0..IMAGE_WIDTH {
-            let mut pixel_colour: Colour = Colour::new(0.0, 0.0, 0.0);
-            for _ in 0..SAMPLES_PER_PIXEL {
-                let u = (x as f32 + rand::random::<f32>()) / (IMAGE_WIDTH - 1) as f32;
-                let v = ((IMAGE_HEIGHT - y - 1) as f32 + rand::random::<f32>()) / (IMAGE_HEIGHT - 1) as f32;
-                let ray = camera.get_ray(u, v);
-                pixel_colour += ray_colour(&ray, &world, MAX_DEPTH);
-            }
-            let mut locked_output_image = output_image.lock().unwrap();
-            write_colour(&mut locked_output_image, x, y, &pixel_colour, SAMPLES_PER_PIXEL);
-        }
-        pb.inc(1);
-    });
-    pb.finish_with_message("done");
-
-    output_image.lock().unwrap().save(args.output_path).unwrap();
+    // run the raytracer
+    let pb = ProgressBar::new(output_image_params.image_height as u64);
+    let raytracer = Raytracer::new(camera, world, output_image_params);
+    raytracer.run(&pb);
+    raytracer.save_image(&args.output_path);
 
     Ok(())
 }
