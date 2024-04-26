@@ -12,3 +12,4 @@ pub mod metal_material;
 pub mod dialectric_material;
 pub mod raytracer;
 pub mod benchmark_world;
+pub mod random_world;
