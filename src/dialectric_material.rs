@@ -4,6 +4,7 @@ use crate::hittable::HitRecord;
 use crate::material::Material;
 use crate::ray::Ray;
 
+#[derive(Debug)]
 pub struct DialectricMaterial {
     pub ir: f32,
 }

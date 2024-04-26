@@ -12,11 +12,11 @@ pub struct HitRecord {
     pub normal: Vec3,
     pub t: f32,
     pub front_face: bool,
-    pub material: Arc<dyn Material + Send + Sync>,
+    pub material: Arc<dyn Material + Sync + Send>,
 }
 
 impl HitRecord {
-    pub fn new(position: Vec3, t: f32, material: Arc<dyn Material + Send + Sync>) -> Self {
+    pub fn new(position: Vec3, t: f32, material: Arc<dyn Material + Sync + Send>) -> Self {
         HitRecord {
             p: position,
             normal: Vec3::default(),

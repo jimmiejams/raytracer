@@ -1,11 +1,12 @@
 use crate::hittable::{HitRecord, Hittable};
 use crate::ray::Ray;
 
+#[derive(Debug)]
 pub enum HittableObject {
     Sphere(crate::sphere::Sphere),
 }
 
-#[derive(Default)]
+#[derive(Default,Debug)]
 pub struct HittableList {
     pub objects: Vec<HittableObject>,
 }

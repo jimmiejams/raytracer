@@ -4,6 +4,7 @@ use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
 
+#[derive(Debug)]
 pub struct MetalMaterial {
     pub albedo: Colour,
     pub fuzz: f32,

@@ -4,6 +4,7 @@ use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
 
+#[derive(Debug)]
 pub struct Sphere {
     pub centre: Vec3,
     pub radius: f32,
