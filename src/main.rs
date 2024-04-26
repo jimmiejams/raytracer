@@ -17,7 +17,6 @@ use raytracer::dialectric_material::DialectricMaterial;
 use raytracer::colour::Colour;
 use raytracer::random::random_range;
 use raytracer::raytracer::{OutputImageParams, Raytracer};
-use raytracer::benchmark_world::benchmark_world;
 
 #[derive(Parser)]
 struct Cli {
@@ -58,9 +57,8 @@ fn render(output_path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
     // image
     let output_image_params = OutputImageParams::new(3.0 / 2.0, 400);
     // world
-    //let mut world: HittableList = HittableList::new();
-    //random_scene(&mut world);
-    let world = benchmark_world();
+    let mut world: HittableList = HittableList::new();
+    random_scene(&mut world);
     // camera
     let camera = Camera::new(
         Vec3::new(13.0, 2.0, 3.0),
