@@ -11,3 +11,4 @@ pub mod lambertian_material;
 pub mod metal_material;
 pub mod dialectric_material;
 pub mod raytracer;
+pub mod benchmark_world;
