@@ -2,6 +2,7 @@ use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use image::{Rgb, Rgb32FImage};
 use indicatif::ProgressBar;
+use rand::{Rng, thread_rng};
 use rayon::prelude::*;
 
 use crate::camera::Camera;
@@ -65,11 +66,12 @@ impl Raytracer {
 
     pub fn run(&self, pb: &ProgressBar) {
         (0..self.output_image_params.image_height).into_par_iter().for_each(|y| {
+            let mut rng = thread_rng();
             for x in 0..self.output_image_params.image_width {
                 let mut pixel_colour: Colour = Colour::new(0.0, 0.0, 0.0);
                 for _ in 0..self.output_image_params.samples_per_pixel {
-                    let u = (x as f32 + rand::random::<f32>()) / (self.output_image_params.image_width - 1) as f32;
-                    let v = ((self.output_image_params.image_height - y - 1) as f32 + rand::random::<f32>()) / (self.output_image_params.image_height - 1) as f32;
+                    let u = (x as f32 + rng.gen::<f32>()) / (self.output_image_params.image_width - 1) as f32;
+                    let v = ((self.output_image_params.image_height - y - 1) as f32 + rng.gen::<f32>()) / (self.output_image_params.image_height - 1) as f32;
                     let ray = self.camera.get_ray(u, v);
                     pixel_colour += self.ray_colour(&ray, self.output_image_params.max_depth);
                 }
