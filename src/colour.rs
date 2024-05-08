@@ -1,4 +1,5 @@
-use std::ops::{AddAssign, Mul, Add};
+use std::ops::{AddAssign, Mul, Add, DivAssign};
+use std::iter::Sum;
 use std::convert::Into;
 use image::Rgb;
 use crate::random;
@@ -98,6 +99,27 @@ impl Mul<f32> for Colour {
     }
 }
 
+impl DivAssign<f32> for Colour {
+    fn div_assign(&mut self, rhs: f32) {
+        self.r /= rhs;
+        self.g /= rhs;
+        self.b /= rhs;
+    }
+}
+
+impl Sum for Colour {
+    fn sum<I>(iter: I) -> Self
+    where
+        I: Iterator<Item = Self>,
+    {
+        iter.fold(Self { r: 0.0, g: 0.0, b: 0.0 }, |a, b| Self {
+            r: a.r + b.r,
+            g: a.g + b.g,
+            b: a.b + b.b,
+        })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -170,5 +192,14 @@ mod tests {
         assert_eq!(c2.r, 0.1 * 0.3);
         assert_eq!(c2.g, 0.2 * 0.3);
         assert_eq!(c2.b, 0.3 * 0.3);
+    }
+
+    #[test]
+    fn div_assign_f32() {
+        let mut c1 = Colour::new(0.1, 0.2, 0.3);
+        c1 /= 2.0;
+        assert_eq!(c1.r, 0.1 / 2.0);
+        assert_eq!(c1.g, 0.2 / 2.0);
+        assert_eq!(c1.b, 0.3 / 2.0);
     }
 }
