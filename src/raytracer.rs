@@ -9,6 +9,7 @@ use crate::camera::Camera;
 use crate::colour::Colour;
 use crate::hittable::Hittable;
 use crate::hittable_list::HittableList;
+use crate::interval::Interval;
 use crate::ray::Ray;
 
 pub struct OutputImageParams {
@@ -87,7 +88,8 @@ impl Raytracer {
         if depth <= 0 {
             return Colour::new(0.0, 0.0, 0.0);
         }
-        let hit_record = self.world.hit(r, 0.001, None);
+        let ray_t: Interval = Interval::new(0.001, f32::INFINITY);
+        let hit_record = self.world.hit(r, &ray_t);
         if let Some(hit) = hit_record {
             if let Some(mat) = hit.material.scatter(&r, &hit) {
                 let (attenuation, scattered) = mat;

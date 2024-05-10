@@ -1,10 +1,11 @@
 use std::sync::Arc;
+use crate::interval::Interval;
 use crate::material::Material;
 use crate::vec3::Vec3;
 use crate::ray::Ray;
 
 pub trait Hittable {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: Option<f32>) -> Option<HitRecord>;
+    fn hit(&self, r: &Ray, ray_t: &Interval) -> Option<HitRecord>;
 }
 
 pub struct HitRecord {

@@ -57,7 +57,7 @@ fn render(output_path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
         Vec3::new(0.0, 1.0, 0.0),
         20.0,
         output_image_params.aspect_ratio,
-        0.02,
+        0.1,
         10.0
     );
 
