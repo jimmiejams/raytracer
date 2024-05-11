@@ -15,11 +15,12 @@ fn render() {
         Vec3::new(0.0, 1.0, 0.0),
         20.0,
         output_image_params.aspect_ratio,
-        0.02,
-        10.0
+        10.0,
+        0.6,
+        &output_image_params,
     );
     let pb = ProgressBar::new(output_image_params.image_height as u64);
-    let raytracer = Raytracer::new(camera, world, output_image_params);
+    let raytracer = Raytracer::new(camera, world, output_image_params, false);
     raytracer.run(&pb);
 }
 

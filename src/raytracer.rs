@@ -2,7 +2,6 @@ use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use image::{Rgb, Rgb32FImage};
 use indicatif::ProgressBar;
-use rand::{Rng, thread_rng};
 use rayon::prelude::*;
 
 use crate::camera::Camera;
@@ -52,28 +51,30 @@ pub struct Raytracer {
     pub world: HittableList,
     pub output_image: Arc<Mutex<Rgb32FImage>>,
     pub output_image_params: OutputImageParams,
+    //
+    track_max_depth: bool,
+    max_depth_counter: Mutex<u64>,
 }
 
 impl Raytracer {
-    pub fn new(camera: Camera, world: HittableList, output_image_params: OutputImageParams) -> Self {
+    pub fn new(camera: Camera, world: HittableList, output_image_params: OutputImageParams, debug: bool) -> Self {
         let output_image = Arc::new(Mutex::new(Rgb32FImage::new(output_image_params.image_width, output_image_params.image_height)));
         Self {
             camera: camera,
             world: world,
             output_image_params: output_image_params,
             output_image: output_image,
+            track_max_depth: debug,
+            max_depth_counter: Mutex::new(0),
         }
     }
 
     pub fn run(&self, pb: &ProgressBar) {
         (0..self.output_image_params.image_height).into_par_iter().for_each(|y| {
-            let mut rng = thread_rng();
             for x in 0..self.output_image_params.image_width {
                 let mut pixel_colour: Colour = Colour::new(0.0, 0.0, 0.0);
                 for _ in 0..self.output_image_params.samples_per_pixel {
-                    let u = (x as f32 + rng.gen::<f32>()) / (self.output_image_params.image_width - 1) as f32;
-                    let v = ((self.output_image_params.image_height - y - 1) as f32 + rng.gen::<f32>()) / (self.output_image_params.image_height - 1) as f32;
-                    let ray = self.camera.get_ray(u, v);
+                    let ray = self.camera.get_ray(x, y);
                     pixel_colour += self.ray_colour(&ray, self.output_image_params.max_depth);
                 }
                 let mut locked_output_image = self.output_image.lock().unwrap();
@@ -82,10 +83,17 @@ impl Raytracer {
             pb.inc(1);
         });
         pb.finish_with_message("done");
+        if self.track_max_depth {
+            println!("number of max depth returns {:?}", self.max_depth_counter);
+        }
     }
 
     fn ray_colour(&self, r: &Ray, depth: i32) -> Colour {
         if depth <= 0 {
+            if self.track_max_depth {
+                let mut c = self.max_depth_counter.lock().unwrap();
+                *c += 1;
+            }
             return Colour::new(0.0, 0.0, 0.0);
         }
         let ray_t: Interval = Interval::new(0.001, f32::INFINITY);

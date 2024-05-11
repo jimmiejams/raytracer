@@ -20,6 +20,8 @@ struct Cli {
 enum Commands {
     Render {
         output_path: PathBuf,
+        #[arg(short, long)]
+        debug: Option<bool>,
     },
     Dump {
         output_path: PathBuf,
@@ -30,8 +32,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // parse command-line arguments
     let args = Cli::parse();
     match &args.command {
-        Some(Commands::Render { output_path }) => {
-            render(output_path)?;
+        Some(Commands::Render { output_path, debug }) => {
+            render(output_path, debug)?;
         },
         Some(Commands::Dump { output_path }) => {
             dump(&output_path)?;
@@ -41,10 +43,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn render(output_path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+fn render(output_path: &PathBuf, debug: &Option<bool>) -> Result<(), Box<dyn std::error::Error>> {
     if output_path.extension().unwrap() != "exr" {
         return Err(format!("output filename {:?} requires an '.exr' extension", output_path).into());
     }
+    let debug = debug.unwrap_or(false);
 
     // image
     let output_image_params = OutputImageParams::new(3.0 / 2.0, 400);
@@ -57,13 +60,14 @@ fn render(output_path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
         Vec3::new(0.0, 1.0, 0.0),
         20.0,
         output_image_params.aspect_ratio,
-        0.1,
-        10.0
+        10.0,
+        0.6,
+        &output_image_params,
     );
 
     // run the raytracer
     let pb = ProgressBar::new(output_image_params.image_height as u64);
-    let raytracer = Raytracer::new(camera, world, output_image_params);
+    let raytracer = Raytracer::new(camera, world, output_image_params, debug);
     raytracer.run(&pb);
     raytracer.save_image(output_path);
 
