@@ -25,7 +25,7 @@ mod tests {
     fn at() {
         let o = Vec3::new(0.0, 0.0, 0.0);
         let d = Vec3::new(1.0, 1.0, 1.0);
-        let r = Ray::new(o, d);
+        let r = Ray::new(o, d, 0.0);
         let a1 = r.at(1.0);
         assert_eq!(a1.x, 0.0 + 1.0);
         assert_eq!(a1.y, 0.0 + 1.0);
