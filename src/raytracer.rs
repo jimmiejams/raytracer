@@ -34,7 +34,7 @@ impl Default for OutputImageParams {
         const ASPECT_RATIO: f32 = 3.0 / 2.0;
         const IMAGE_WIDTH: u32 = 400;
         const IMAGE_HEIGHT: u32 = (IMAGE_WIDTH as f32 / ASPECT_RATIO) as u32;
-        const SAMPLES_PER_PIXEL: u32 = 500;
+        const SAMPLES_PER_PIXEL: u32 = 100;
         const MAX_DEPTH: i32 = 50;
         Self {
             aspect_ratio: ASPECT_RATIO,

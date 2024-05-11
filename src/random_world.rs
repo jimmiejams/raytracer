@@ -26,9 +26,10 @@ pub fn random_world() -> HittableList {
                 if choose_mat < 0.8 {
                     let albedo = Colour::random_new() * Colour::random_new();
                     let sphere_material: Arc<dyn Material> = Arc::new(LambertianMaterial::new(albedo));
+                    let centre2 = centre + Vec3::new(0.0, random_range(0.0, 0.5), 0.0);
                     world.objects.push(
                         HittableObject::Sphere(
-                            Sphere::new(centre, 0.2, Arc::clone(&sphere_material))
+                            Sphere::new_moving(centre, centre2, 0.2, Arc::clone(&sphere_material))
                         )
                     );
                 } else if choose_mat < 0.95 {

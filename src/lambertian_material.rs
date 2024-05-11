@@ -18,12 +18,12 @@ impl LambertianMaterial {
 }
 
 impl Material for LambertianMaterial {
-    fn scatter(&self, _r_in: &Ray, rec: &HitRecord) -> Option<(Colour, Ray)> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Colour, Ray)> {
         let mut scatter_direction = rec.normal + Vec3::random_unit_vector();
         if scatter_direction.near_zero() {
             scatter_direction = rec.normal;
         }
-        let scattered = Ray::new(rec.p, scatter_direction);
+        let scattered = Ray::new(rec.p, scatter_direction, r_in.time);
         Some((self.albedo, scattered))
     }
 }
