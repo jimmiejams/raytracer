@@ -21,8 +21,8 @@ impl MetalMaterial {
 
 impl Material for MetalMaterial {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Colour, Ray)> {
-        let reflected = r_in.direction.unit_vector().reflect(&rec.normal);
-        let fuzzy_reflected = reflected + Vec3::random_in_unit_sphere() * self.fuzz;
+        let reflected = r_in.direction.reflect(&rec.normal);
+        let fuzzy_reflected = reflected.unit_vector() + Vec3::random_unit_vector() * self.fuzz;
         let scattered = Ray::new(rec.p, fuzzy_reflected);
         return if scattered.direction.dot(&rec.normal) > 0.0 {
             Some((self.albedo, scattered))
