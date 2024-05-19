@@ -1,20 +1,31 @@
+use std::sync::Arc;
+use crate::aabb::AABB;
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
 use crate::ray::Ray;
 
-#[derive(Debug)]
+#[derive(Clone)]
 pub enum HittableObject {
     Sphere(crate::sphere::Sphere),
 }
 
-#[derive(Default,Debug)]
+#[derive(Default)]
 pub struct HittableList {
-    pub objects: Vec<HittableObject>,
+    pub objects: Vec<Arc<dyn Hittable>>,
+    pub bbox: AABB,
 }
 
 impl HittableList {
     pub fn new() -> Self {
-        Self { objects: vec![] }
+        Self {
+            objects: vec![],
+            ..Default::default()
+        }
+    }
+
+    pub fn add(&mut self, object: &Arc<dyn Hittable>) {
+        self.objects.push(Arc::clone(object));
+        self.bbox = AABB::new_from_aabb(&self.bbox, &object.bounding_box());
     }
 }
 
@@ -33,5 +44,9 @@ impl Hittable for HittableList {
             }
         }
         best_hit
+    }
+
+    fn bounding_box(&self) -> AABB {
+        *(self.bbox)
     }
 }
